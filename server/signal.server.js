@@ -5,84 +5,78 @@
 var channels = {};
 var sockets = {};
 
+var Data = {}
+
+
+const msgSockets = (rootId, fn)=>{
+	Object.entries(sockets).map(([id, targetSocket])=>{
+		if(rootId !== id) fn(id, targetSocket)
+	})
+}
+
+
+
 module.exports = (server)=>{
 
 	var io  = require('socket.io').listen(server);
 
 
-	io.sockets.on('connection', function (socket) {
-		socket.channels = {};
-		sockets[socket.id] = socket;
+	io.sockets.on('connection', (Socket)=>{
+		sockets[Socket.id] = Socket;
+		Data[Socket.id] = {};
 
-		console.log("["+ socket.id + "] connection accepted");
-		socket.on('disconnect', function () {
-			for (var channel in socket.channels) {
-				part(channel);
-			}
-			console.log("["+ socket.id + "] disconnected");
-			delete sockets[socket.id];
+		console.log("["+ Socket.id + "] connection accepted");
+		Socket.on('disconnect', function () {
+			//console.log("["+ Data[Socket.id].name + "] disconnected");
+			msgSockets(Socket.id, (id, socket)=>{
+				socket.emit('removePeer', {'peer_id': Socket.id});
+				Socket.emit('removePeer', {'peer_id': id});
+			});
+			delete sockets[Socket.id];
+			delete Data[Socket.id];
 		});
 
+		Socket.on('update', function(data){
+			Data[Socket.id] = data;
+			msgSockets(Socket.id, (id, socket)=>{
+				socket.emit('update', {'peer_id': Socket.id, data})
+			});
+		})
 
-		socket.on('join', function (config) {
-			console.log("["+ socket.id + "] join ", config);
-			var channel = config.channel;
-			var userdata = config.userdata;
+		Socket.on('join', function (data) {
+			//console.log("["+ Data[Socket.id].name + "] join ", Data);
 
-			if (channel in socket.channels) {
-				console.log("["+ socket.id + "] ERROR: already joined ", channel);
-				return;
-			}
+			Data[Socket.id] = data;
 
-			if (!(channel in channels)) {
-				channels[channel] = {};
-			}
-
-			for (id in channels[channel]) {
-				channels[channel][id].emit('addPeer', {'peer_id': socket.id, 'should_create_offer': false});
-				socket.emit('addPeer', {'peer_id': id, 'should_create_offer': true});
-			}
-
-			channels[channel][socket.id] = socket;
-			socket.channels[channel] = channel;
+			msgSockets(Socket.id, (id, socket)=>{
+				socket.emit('addPeer', {'peer_id': Socket.id, 'should_create_offer': false, data })
+				Socket.emit('addPeer', {'peer_id': id, 'should_create_offer': true, data : Data[id] })
+			});
 		});
 
-		function part(channel) {
-			console.log("["+ socket.id + "] part ");
+		// Socket.on('leave', function(){
+		// 	//console.log("["+ Data[Socket.id].name + "] leave ");
+		// 	msgSockets(Socket.id, (id, socket)=>{
+		// 		socket.emit('removePeer', {'peer_id': Socket.id});
+		// 		Socket.emit('removePeer', {'peer_id': id});
+		// 	});
 
-			if (!(channel in socket.channels)) {
-				console.log("["+ socket.id + "] ERROR: not in ", channel);
-				return;
-			}
+		// 	delete sockets[Socket.id];
+		// 	delete Data[Socket.id];
+		// });
 
-			delete socket.channels[channel];
-			delete channels[channel][socket.id];
-
-			for (id in channels[channel]) {
-				channels[channel][id].emit('removePeer', {'peer_id': socket.id});
-				socket.emit('removePeer', {'peer_id': id});
-			}
-		}
-		socket.on('part', part);
-
-		socket.on('relayICECandidate', function(config) {
-			var peer_id = config.peer_id;
-			var ice_candidate = config.ice_candidate;
-			console.log("["+ socket.id + "] relaying ICE candidate to [" + peer_id + "] ", ice_candidate);
-
-			if (peer_id in sockets) {
-				sockets[peer_id].emit('iceCandidate', {'peer_id': socket.id, 'ice_candidate': ice_candidate});
-			}
+		Socket.on('relayICECandidate', function({peer_id, ice_candidate}) {
+			//console.log("["+ Data[Socket.id].name + "] relaying ICE candidate to [" + Data[peer_id].name + "] ")//, ice_candidate);
+			msgSockets(Socket.id, (id, socket)=>{
+				socket.emit('iceCandidate', {'peer_id': Socket.id, 'ice_candidate': ice_candidate});
+			})
 		});
 
-		socket.on('relaySessionDescription', function(config) {
-			var peer_id = config.peer_id;
-			var session_description = config.session_description;
-			console.log("["+ socket.id + "] relaying session description to [" + peer_id + "] ", session_description);
-
-			if (peer_id in sockets) {
-				sockets[peer_id].emit('sessionDescription', {'peer_id': socket.id, 'session_description': session_description});
-			}
+		Socket.on('relaySessionDescription', function({peer_id, session_description}) {
+			//console.log("["+ Data[Socket.id].name + "] relaying session description to [" + Data[peer_id].name + "] ")//, session_description);
+			msgSockets(Socket.id, (id, socket)=>{
+				socket.emit('sessionDescription', {'peer_id': Socket.id, 'session_description': session_description});
+			})
 		});
 	});
 
@@ -90,14 +84,3 @@ module.exports = (server)=>{
 
 }
 
-
-/**
- * Users will connect to the signaling server, after which they'll issue a "join"
- * to join a particular channel. The signaling server keeps track of all sockets
- * who are in a channel, and on join will send out 'addPeer' events to each pair
- * of users in a channel. When clients receive the 'addPeer' even they'll begin
- * setting up an RTCPeerConnection with one another. During this process they'll
- * need to relay ICECandidate information to one another, as well as SessionDescription
- * information. After all of that happens, they'll finally be able to complete
- * the peer connection and will be streaming audio/video between eachother.
- */

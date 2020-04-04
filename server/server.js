@@ -12,14 +12,19 @@ const SignalServer = require('./signal.server.js');
 
 
 //const root_url = `http://localhost:8000`
-const root_url = `https://stolksdorf.ngrok.io`
+//const root_url = `https://stolksdorf.ngrok.io`
 
 
 handler.get('/', (req, res)=>{
 	const props = {
 		title : 'ssr',
-		root_url
+		root_url : (req.headers.host.startsWith('localhost')
+			? `http://${req.headers.host}`
+			: `https://${req.headers.host}`
+		)
 	}
+
+	//return res.send(true);
 	return res.send(renderMain(props));
 });
 
