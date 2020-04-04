@@ -1,0 +1,23 @@
+{
+  "name": "chitchat",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "node scripts/build.script.js --dev",
+    "build": "node scripts/build.script.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/core": "^7.9.0",
+    "@babel/preset-react": "^7.9.4",
+    "express": "^4.17.1",
+    "less": "^3.11.1",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "socket.io": "^2.3.0",
+    "vitreum": "^6.0.0"
+  }
+}

@@ -1,0 +1,9 @@
+#Logs
+logs
+*.log
+
+#Ignore our built files
+build
+
+#NPM Folder of Libraries
+node_modules
