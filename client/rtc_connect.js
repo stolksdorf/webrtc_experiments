@@ -8,7 +8,7 @@ var server = null;   /* our socket.io connection to our webserver */
 let Peers = {};
 
 
-function start(server_url, userData) {
+function start(server_url, userData, userAudioStream) {
 	console.log("Connecting to signaling server", server_url);
 	server = io(server_url);
 	//server = io();
@@ -16,8 +16,15 @@ function start(server_url, userData) {
 	server.on('connect', async function(temp) {
 		console.log("Connected to signaling server");
 
-		console.log(server)
-		await initLocalMedia();
+		res.id = server.id;
+
+		Peers[res.id] = {
+			id : res.id,
+			stream : userAudioStream,
+			data : userData
+		};
+
+		//await initLocalMedia();
 		server.emit('join', userData);
 	});
 	server.on('disconnect', function() {
@@ -53,6 +60,7 @@ function start(server_url, userData) {
 			{"optional": [{"DtlsSrtpKeyAgreement": true}]}
 		);
 
+		Peers[peer_id].rtc.addStream(Peers[server.id].stream);
 
 		Peers[peer_id].rtc.onicecandidate = function(event) {
 			if (event.candidate) {
@@ -66,16 +74,16 @@ function start(server_url, userData) {
 			}
 		}
 		Peers[peer_id].rtc.onaddstream = function(event) {
-			console.log("onAddStream", event);
 			Peers[peer_id].stream = event.stream;
-
+			res.onUpdate();
 			//fire an update
 
 			//Peers[peer_id].element  = createAudioElement(event.stream, false, peer_id);
 		}
 
 		/* Add our local stream */
-		Peers[peer_id].rtc.addStream(LocalMediaStream);
+		//Peers[peer_id].rtc.addStream(LocalMediaStream);
+
 
 		if (should_create_offer) {
 			console.log("Creating RTC offer to ", peer_id);
@@ -99,6 +107,7 @@ function start(server_url, userData) {
 
 	server.on('sessionDescription', function(config) {
 		console.log('Remote description received: ', config);
+		console.log(Peers)
 		var peer_id = config.peer_id;
 		var peer = Peers[peer_id].rtc;
 		var remote_description = config.session_description;
@@ -124,7 +133,7 @@ function start(server_url, userData) {
 				}
 			},
 			function(error) {
-				console.log("setRemoteDescription error: ", error);
+				console.log("setRemoteDescription error: ", error, peer_id);
 			}
 		);
 		console.log("Description Object: ", desc);
@@ -178,6 +187,7 @@ const initLocalMedia = async ()=>{
 
 let res = {
 	start,
+
 	Peers,
 	update : (data)=>{
 		server.emit('update', data)

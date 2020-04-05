@@ -70,14 +70,14 @@ module.exports = (server)=>{
 		Socket.on('relayICECandidate', function({peer_id, ice_candidate}) {
 			//console.log("["+ Data[Socket.id].name + "] relaying ICE candidate to [" + Data[peer_id].name + "] ")//, ice_candidate);
 			msgSockets((id, socket)=>{
-				socket.emit('iceCandidate', {'peer_id': Socket.id, 'ice_candidate': ice_candidate});
+				if(id !== Socket.id) socket.emit('iceCandidate', {'peer_id': Socket.id, 'ice_candidate': ice_candidate});
 			})
 		});
 
 		Socket.on('relaySessionDescription', function({peer_id, session_description}) {
 			//console.log("["+ Data[Socket.id].name + "] relaying session description to [" + Data[peer_id].name + "] ")//, session_description);
 			msgSockets((id, socket)=>{
-				socket.emit('sessionDescription', {'peer_id': Socket.id, 'session_description': session_description});
+				if(id !== Socket.id) socket.emit('sessionDescription', {'peer_id': Socket.id, 'session_description': session_description});
 			})
 		});
 	});
