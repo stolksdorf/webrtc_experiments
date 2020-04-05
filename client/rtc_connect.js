@@ -13,8 +13,10 @@ function start(server_url, userData) {
 	server = io(server_url);
 	//server = io();
 
-	server.on('connect', async function() {
+	server.on('connect', async function(temp) {
 		console.log("Connected to signaling server");
+
+		console.log(server)
 		await initLocalMedia();
 		server.emit('join', userData);
 	});
@@ -22,7 +24,7 @@ function start(server_url, userData) {
 		console.log("Disconnected from signaling server");
 		Object.values(Peers).map((peer)=>{
 			peer.rtc.close()
-			peer.element.remove()
+			//peer.element.remove()
 		})
 		Peers = {};
 	});
@@ -35,7 +37,7 @@ function start(server_url, userData) {
 
 
 	server.on('removePeer', function({peer_id}) {
-		Peers[peer_id].element.remove();
+		//Peers[peer_id].element.remove();
 		Peers[peer_id].rtc.close();
 		delete Peers[peer_id];
 		res.onRemovePeep(peer_id);
@@ -44,8 +46,7 @@ function start(server_url, userData) {
 	server.on('addPeer', function({peer_id, should_create_offer, data}) {
 		if(Peers[peer_id]) return;
 
-		Peers[peer_id] = { data };
-
+		Peers[peer_id] = { id : peer_id, data };
 
 		Peers[peer_id].rtc = new RTCPeerConnection(
 			{"iceServers": ICE_SERVERS},
@@ -66,7 +67,11 @@ function start(server_url, userData) {
 		}
 		Peers[peer_id].rtc.onaddstream = function(event) {
 			console.log("onAddStream", event);
-			Peers[peer_id].element  = createAudioElement(event.stream, false, peer_id);
+			Peers[peer_id].stream = event.stream;
+
+			//fire an update
+
+			//Peers[peer_id].element  = createAudioElement(event.stream, false, peer_id);
 		}
 
 		/* Add our local stream */

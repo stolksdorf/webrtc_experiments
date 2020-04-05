@@ -8,9 +8,9 @@ var sockets = {};
 var Data = {}
 
 
-const msgSockets = (rootId, fn)=>{
+const msgSockets = (fn)=>{
 	Object.entries(sockets).map(([id, targetSocket])=>{
-		if(rootId !== id) fn(id, targetSocket)
+		fn(id, targetSocket)
 	})
 }
 
@@ -28,9 +28,11 @@ module.exports = (server)=>{
 		console.log("["+ Socket.id + "] connection accepted");
 		Socket.on('disconnect', function () {
 			//console.log("["+ Data[Socket.id].name + "] disconnected");
-			msgSockets(Socket.id, (id, socket)=>{
-				socket.emit('removePeer', {'peer_id': Socket.id});
-				Socket.emit('removePeer', {'peer_id': id});
+			msgSockets((id, socket)=>{
+				if(id !== Socket.id){
+					socket.emit('removePeer', {'peer_id': Socket.id});
+					Socket.emit('removePeer', {'peer_id': id});
+				}
 			});
 			delete sockets[Socket.id];
 			delete Data[Socket.id];
@@ -38,7 +40,7 @@ module.exports = (server)=>{
 
 		Socket.on('update', function(data){
 			Data[Socket.id] = data;
-			msgSockets(Socket.id, (id, socket)=>{
+			msgSockets((id, socket)=>{
 				socket.emit('update', {'peer_id': Socket.id, data})
 			});
 		})
@@ -48,7 +50,7 @@ module.exports = (server)=>{
 
 			Data[Socket.id] = data;
 
-			msgSockets(Socket.id, (id, socket)=>{
+			msgSockets((id, socket)=>{
 				socket.emit('addPeer', {'peer_id': Socket.id, 'should_create_offer': false, data })
 				Socket.emit('addPeer', {'peer_id': id, 'should_create_offer': true, data : Data[id] })
 			});
@@ -56,7 +58,7 @@ module.exports = (server)=>{
 
 		// Socket.on('leave', function(){
 		// 	//console.log("["+ Data[Socket.id].name + "] leave ");
-		// 	msgSockets(Socket.id, (id, socket)=>{
+		// 	msgSockets((id, socket)=>{
 		// 		socket.emit('removePeer', {'peer_id': Socket.id});
 		// 		Socket.emit('removePeer', {'peer_id': id});
 		// 	});
@@ -67,14 +69,14 @@ module.exports = (server)=>{
 
 		Socket.on('relayICECandidate', function({peer_id, ice_candidate}) {
 			//console.log("["+ Data[Socket.id].name + "] relaying ICE candidate to [" + Data[peer_id].name + "] ")//, ice_candidate);
-			msgSockets(Socket.id, (id, socket)=>{
+			msgSockets((id, socket)=>{
 				socket.emit('iceCandidate', {'peer_id': Socket.id, 'ice_candidate': ice_candidate});
 			})
 		});
 
 		Socket.on('relaySessionDescription', function({peer_id, session_description}) {
 			//console.log("["+ Data[Socket.id].name + "] relaying session description to [" + Data[peer_id].name + "] ")//, session_description);
-			msgSockets(Socket.id, (id, socket)=>{
+			msgSockets((id, socket)=>{
 				socket.emit('sessionDescription', {'peer_id': Socket.id, 'session_description': session_description});
 			})
 		});
