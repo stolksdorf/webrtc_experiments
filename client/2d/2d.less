@@ -1,0 +1,100 @@
+html, body, main, .Main{
+	height : 100vh;
+	width : 100vw;
+	padding: 0;
+	margin: 0;
+	font-family: Roboto, sans-serif;
+}
+
+.Main{
+	text-align: center;
+
+
+	#peeps{
+		display: flex;
+		&>div{
+			padding : 10px;
+			margin : 10px auto;
+
+			max-width: 800px;
+
+			display: flex;
+			justify-content: space-around;
+			align-items: center;
+			.profile, .info{
+				display: flex;
+				align-items: center;
+				height : 100%;
+
+				flex-direction: column;
+				justify-content: space-around;
+
+				img{
+					height : 50px;
+				}
+				small{
+					font-size: 0.5em;
+				}
+			}
+		}
+	}
+
+	#map{
+		margin: 30px auto;
+		border: 2px solid black;
+		// width : 500px;
+		// height : 500px;
+		position: relative;
+
+		#stage{
+			position: absolute;
+			width : 200px;
+			height : 80px;
+			background-color: fade(blue, 20%);
+			left : 150px;
+			vertical-align: middle;
+			text-align: center;
+		}
+
+		#pit{
+			position: absolute;
+			width : 100px;
+			height : 100px;
+			background-color: black;
+			bottom : 0px;
+			vertical-align: middle;
+			text-align: center;
+			color : white;
+
+		}
+
+
+		img{
+			position: absolute;
+			top: 250px;
+			left: 250px;
+			height : 50px;
+			width : 50px;
+			transform: translate(-50%, -50%);
+
+		}
+
+		#me{
+			display: block;
+			border-radius: 100%;
+			border: 1px solid fade(black, 20%);
+
+			&.whipser{
+				padding : 50px;
+			}
+			&.talk{
+				padding : 80px;
+			}
+			&.shout{
+				padding : 150px;
+			}
+		}
+	}
+
+
+}

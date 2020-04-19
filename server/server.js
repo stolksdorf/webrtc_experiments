@@ -5,7 +5,7 @@ const handler  = express();
 var server = http.createServer(handler)
 handler.use(express.static(__dirname + '/../build'));
 
-const renderMain = require('./renderPage.js');
+const render = require('./renderPage.js');
 
 const SignalServer = require('./signal.server.js');
 
@@ -14,18 +14,32 @@ const SignalServer = require('./signal.server.js');
 //const root_url = `http://localhost:8000`
 //const root_url = `https://stolksdorf.ngrok.io`
 
-
 handler.get('/', (req, res)=>{
+	return res.send(`<html><body>
+		<a href='/2d'>2d Audio Chat</a>
+		<a href='/video'>video Chat</a>
+	</body></html>`)
+})
+
+
+handler.get('/2d', (req, res)=>{
 	const props = {
-		title : 'ssr',
 		root_url : (req.headers.host.startsWith('localhost')
 			? `http://${req.headers.host}`
 			: `https://${req.headers.host}`
 		)
 	}
+	return res.send(render('2d', props));
+});
 
-	//return res.send(true);
-	return res.send(renderMain(props));
+handler.get('/video', (req, res)=>{
+	const props = {
+		root_url : (req.headers.host.startsWith('localhost')
+			? `http://${req.headers.host}`
+			: `https://${req.headers.host}`
+		)
+	}
+	return res.send(render('video', props));
 });
 
 

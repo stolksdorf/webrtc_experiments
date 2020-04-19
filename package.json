@@ -1,5 +1,5 @@
 {
-  "name": "chitchat",
+  "name": "webrtc_experiments",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -18,6 +18,6 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "socket.io": "^2.3.0",
-    "vitreum": "^6.0.0"
+    "vitreum": "^6.0.1"
   }
 }
