@@ -1,4 +1,4 @@
-# 💬 WebRTC Experiments
+# 💬 webRTC experiments
 
 Experiments with webRTC and peer-to-peer video and audio calling. The server is only used for handshaking, after that all comunnication is peer-to-peer. SupportsL audio, video, and data channels
 
