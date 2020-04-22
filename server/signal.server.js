@@ -10,8 +10,8 @@ module.exports = (server)=>{
 			})
 		};
 		const msgTarget = (targetId, data)=>{
-			Peers.find((peer)=>peer.id == targetId)
-			.emit('msg', { id : Socket.id, ...data});
+			const target = Peers.find((peer)=>peer.id == targetId)
+			if(target) target.emit('msg', { id : Socket.id, ...data});
 		};
 		Socket.on('disconnect', ()=>{
 			Peers = Peers.filter((peer)=>peer.id !== Socket.id)

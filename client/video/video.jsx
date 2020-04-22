@@ -33,12 +33,13 @@ const init = async (server_url, video=true)=>{
 
 	const stream = await navigator.mediaDevices.getUserMedia({audio:true, video});
 	addStream('me', stream);
-	RTC.connect(server_url, stream);
+	const {id} = await RTC.connect(server_url, stream);
+	document.title = id;
 }
 
 
 function VideoChat({root_url, ...props}){
-	React.useEffect(()=>{ init(root_url, false); }, [])
+	//React.useEffect(()=>{ init(root_url, false); }, [])
 
 
 	return <div className='VideoChat'>
